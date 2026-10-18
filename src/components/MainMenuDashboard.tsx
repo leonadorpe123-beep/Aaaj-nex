@@ -143,10 +143,8 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
   errorMessage,
   onStartFreeCamera,
 }) => {
-  // Navigation State: 'root' (GT7 2x3 cards) or dedicated mode screen (Screen 3)
-  const [activeScreen, setActiveScreen] = useState<MenuDedicatedScreen>(() => {
-    return initialCircuit ? 'grand_prix' : 'root';
-  });
+  // Navigation State: 'root' (Screen 2 Mode Selection) or dedicated mode screen (Screen 3)
+  const [activeScreen, setActiveScreen] = useState<MenuDedicatedScreen>('root');
 
   // Selected Circuit
   const [selectedCircuit, setSelectedCircuit] = useState<CircuitId>(initialCircuit || 'square_apex');
@@ -364,7 +362,7 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
     return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
   };
 
-  // Gran Turismo 7 Cards Configuration for Screen 2 (Root View)
+  // Gran Turismo 7 Cards Configuration for Screen 2 (Root View: 4 Core Modes)
   const gt7Cards = [
     {
       id: 'career',
@@ -375,38 +373,12 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
       action: () => handleNavigateToScreen('career'),
     },
     {
-      id: 'customization',
-      title: 'COLECCIÓN & DISEÑO',
-      desc: 'Compra, personaliza livery y gestiona tu escudería.',
-      bg: '/images/cards/card_garage.jpg',
-      icon: Car,
-      action: () => {
-        playUiClick(850);
-        if (onOpenLiveryStudio) {
-          onOpenLiveryStudio();
-        } else {
-          handleNavigateToScreen('career');
-        }
-      },
-    },
-    {
       id: 'free',
       title: 'CONDUCCIÓN LIBRE',
       desc: 'Explora libremente los circuitos y disfruta de la conducción.',
       bg: '/images/cards/card_free.jpg',
       icon: Timer,
       action: () => handleNavigateToScreen('free'),
-    },
-    {
-      id: 'school',
-      title: 'ESCUELA DE CONDUCCIÓN',
-      desc: 'Mejora tus habilidades con tutoriales y guía de mandos.',
-      bg: '/images/cards/card_school.jpg',
-      icon: GraduationCap,
-      action: () => {
-        playUiClick(800);
-        setShowControlsModal(true);
-      },
     },
     {
       id: 'multiplayer',
@@ -539,26 +511,28 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
     },
   ];
 
-  // Arrow key navigation for 2x3 cards in root menu
+  // Arrow key navigation for 2x2 cards in root menu
   useEffect(() => {
     if (activeScreen !== 'root' || showControlsModal || activeOverlay !== 'none') return;
     const handleMenuNav = (e: KeyboardEvent) => {
+      const total = gt7Cards.length;
+      if (total === 0) return;
       if (e.key === 'ArrowRight') {
         e.preventDefault();
         playUiHover();
-        setSelectedCardIndex((prev) => (prev + 1) % 6);
+        setSelectedCardIndex((prev) => (prev + 1) % total);
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         playUiHover();
-        setSelectedCardIndex((prev) => (prev - 1 + 6) % 6);
+        setSelectedCardIndex((prev) => (prev - 1 + total) % total);
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         playUiHover();
-        setSelectedCardIndex((prev) => (prev + 3) % 6);
+        setSelectedCardIndex((prev) => (prev + 2) % total);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         playUiHover();
-        setSelectedCardIndex((prev) => (prev - 3 + 6) % 6);
+        setSelectedCardIndex((prev) => (prev - 2 + total) % total);
       } else if (e.key === 'Enter') {
         e.preventDefault();
         const c = gt7Cards[selectedCardIndex];
@@ -567,7 +541,7 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
     };
     window.addEventListener('keydown', handleMenuNav);
     return () => window.removeEventListener('keydown', handleMenuNav);
-  }, [activeScreen, selectedCardIndex, showControlsModal, activeOverlay]);
+  }, [activeScreen, selectedCardIndex, showControlsModal, activeOverlay, gt7Cards]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-between h-screen max-h-screen overflow-hidden select-none text-white font-sans bg-neutral-950">
@@ -688,41 +662,41 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
         </header>
       ) : (
         /* Screen 3 Top Header matching the luxury motorsport styling */
-        <header className="relative z-20 w-full border-b border-white/10 bg-neutral-950/85 backdrop-blur-xl px-3 sm:px-6 py-2 flex items-center justify-between flex-shrink-0 shadow-lg">
+        /* Screen 3 Top Header matching the luxury motorsport styling */
+        <header className="relative z-20 w-full border-b border-white/10 bg-neutral-950/85 backdrop-blur-xl px-2.5 sm:px-6 py-1 sm:py-1.5 flex items-center justify-between flex-shrink-0 shadow-lg">
           {/* Left: Mode Title & F1 Badge */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="px-2 py-0.5 rounded bg-red-600 text-white font-black italic tracking-tighter text-sm font-mono shadow-md border border-red-400/40">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="px-1.5 sm:px-2 py-0.5 rounded bg-red-600 text-white font-black italic tracking-tighter text-xs sm:text-sm font-mono shadow-md border border-red-400/40">
                 F1
               </div>
             </div>
 
-            <div className="leading-tight">
-              <h2 className="text-sm sm:text-base font-black uppercase tracking-wider text-white font-sans flex items-center gap-2">
-                {activeScreen === 'career' && 'MODO CARRERA 2026'}
-                {activeScreen === 'free' && 'ENTRENAMIENTO & TIME ATTACK'}
-                {activeScreen === 'multiplayer' && 'PADDOCK MULTIJUGADOR 1V1'}
-                {activeScreen === 'grand_prix' && 'GRAN PREMIO OFICIAL FIA'}
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase bg-white/10 border border-white/15 text-cyan-300">
-                  CONFIGURACIÓN DE SALIDA
+            <div className="leading-tight truncate">
+              <h2 className="text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white font-sans flex items-center gap-1.5 truncate">
+                <span className="truncate">
+                  {activeScreen === 'career' && 'MODO CARRERA 2026'}
+                  {activeScreen === 'free' && 'ENTRENAMIENTO & TIME ATTACK'}
+                  {activeScreen === 'multiplayer' && 'PADDOCK MULTIJUGADOR 1V1'}
+                  {activeScreen === 'grand_prix' && 'GRAN PREMIO OFICIAL FIA'}
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-mono font-bold uppercase bg-white/10 border border-white/15 text-cyan-300 hidden min-[480px]:inline">
+                  CONFIGURACIÓN
                 </span>
               </h2>
-              <p className="text-[10px] text-neutral-400 hidden sm:block">
-                Selecciona cada parámetro mediante los botones para personalizar tu monoplaza y carrera.
-              </p>
             </div>
           </div>
 
           {/* Right: Driver Badge, Credits, Fullscreen & Back Button */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
             {/* Driver Badge */}
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/90 border border-white/10 text-xs">
-              <div className="w-5 h-5 rounded-full bg-red-600/40 border border-red-500/60 flex items-center justify-center text-white text-[10px] font-black font-mono">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-neutral-900/90 border border-white/10 text-xs">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-600/40 border border-red-500/60 flex items-center justify-center text-white text-[9px] sm:text-[10px] font-black font-mono">
                 {carNumber}
               </div>
               <div className="flex flex-col leading-none text-left">
-                <span className="text-[10px] font-bold text-white truncate max-w-[110px]">{driverDisplayName}</span>
-                <span className="text-[7px] text-neutral-400 font-mono truncate max-w-[110px]">{teamName}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-white truncate max-w-[85px] sm:max-w-[110px]">{driverDisplayName}</span>
+                <span className="text-[7px] text-neutral-400 font-mono truncate max-w-[85px] sm:max-w-[110px] hidden min-[360px]:inline">{teamName}</span>
               </div>
             </div>
 
@@ -730,7 +704,7 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
               onClick={toggleFullscreen}
               onMouseEnter={playUiHover}
               title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-              className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-neutral-300 hover:text-white transition-all cursor-pointer backdrop-blur-md"
+              className="p-1 sm:p-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-neutral-300 hover:text-white transition-all cursor-pointer backdrop-blur-md"
             >
               {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
@@ -739,11 +713,11 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
             <button
               onClick={handleBackToGrid}
               onMouseEnter={playUiHover}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600/30 hover:bg-red-600/50 border border-red-500/50 text-red-100 hover:text-white transition-all text-xs font-bold cursor-pointer shadow-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-red-600/30 hover:bg-red-600/50 border border-red-500/50 text-red-100 hover:text-white transition-all text-xs font-bold cursor-pointer shadow-md"
               title="Volver a selección de modalidades"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">MODOS</span>
+              <span>MODOS</span>
             </button>
           </div>
         </header>
@@ -753,7 +727,7 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
       {/* 2. MAIN CONTENT VIEWPORT: ZERO-SCROLL FOR BOTH SCREENS                    */}
       {/* ========================================================================= */}
       {activeScreen === 'root' ? (
-        /* SCREEN 2: 2x3 Gran Turismo 7 Panoramic Mode Grid (Zero Scroll) */
+        /* SCREEN 2: 2x2 Mode Selection Grid (70% Button Opacity & Zero Scroll) */
         <main className="relative z-10 flex-1 flex flex-col justify-between px-3 sm:px-6 md:px-8 py-2 sm:py-3.5 max-w-7xl mx-auto w-full min-h-0 overflow-hidden">
           {/* Top Title Banner */}
           <div className="flex-shrink-0 mb-1 sm:mb-2 text-left">
@@ -765,8 +739,8 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
             </p>
           </div>
 
-          {/* 2x3 Mode Selection Grid */}
-          <div className="flex-1 min-h-0 grid grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2 gap-2 sm:gap-3 md:gap-3.5 w-full items-stretch my-auto">
+          {/* 4 Cards Grid in 2x2 with 70% opacity background images */}
+          <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-2 gap-2.5 sm:gap-3.5 md:gap-4 w-full items-stretch my-auto">
             {gt7Cards.map((card, idx) => {
               const Icon = card.icon;
               const isSelected = selectedCardIndex === idx;
@@ -788,10 +762,11 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
                       : 'border border-white/20 hover:border-cyan-400/80 hover:shadow-[0_0_16px_rgba(34,211,238,0.35)]'
                   }`}
                 >
+                  {/* Background Image with 70% opacity */}
                   <img
                     src={card.bg}
                     alt={card.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                    className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-500 ease-out group-hover:scale-108"
                     loading="eager"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent pointer-events-none" />
@@ -820,70 +795,203 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
           </div>
         </main>
       ) : (
-        /* SCREEN 3: Custom Background + 6 Compact Selector Buttons (90% opacity) + Lateral Summary Panel (Zero Scroll) */
-        <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-2 sm:gap-3 px-2 sm:px-4 md:px-6 py-1.5 sm:py-2.5 max-w-7xl mx-auto w-full min-h-0 overflow-hidden">
-          {/* LEFT COLUMN: 6 Compact Selector Buttons with 90% Opacity Background Images */}
-          <div className="flex-1 min-h-0 flex flex-col justify-between">
-            {/* Top Quick Mini Bar */}
-            <div className="flex-shrink-0 flex items-center justify-between px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 text-[9px] sm:text-[10px] text-neutral-300 font-mono mb-1.5">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                <span className="truncate uppercase font-bold text-white tracking-wider">
-                  {activeScreen === 'grand_prix'
-                    ? 'GRAN PREMIO OFICIAL FIA'
-                    : activeScreen === 'free'
-                    ? 'PRÁCTICA LIBRE'
-                    : activeScreen === 'career'
-                    ? 'MODO CARRERA 2026'
-                    : 'MULTIJUGADOR 1V1'}
-                </span>
-                <span className="text-neutral-500 hidden sm:inline">·</span>
-                <span className="text-neutral-400 hidden sm:inline truncate">Personalización y Telemetría</span>
+        /* SCREEN 3: Custom Background + 6 Selector Buttons (60% Opacity) + Zero-Scroll Responsive Layout */
+        <main className="relative z-10 flex-1 flex flex-col px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 max-w-7xl mx-auto w-full min-h-0 overflow-hidden">
+          
+          {/* ========================================================================= */}
+          {/* LAYOUT A: LANDSCAPE VIEWPORT (Horizontal Phone/Desktop: Left Minimalist Panel + 3x2 Grid) */}
+          {/* ========================================================================= */}
+          <div className="hidden landscape:flex flex-row gap-2 sm:gap-3 flex-1 min-h-0 items-stretch">
+            {/* Left Minimalist Sidebar (GT7 / Reference Motorsport Style) */}
+            <aside className="w-48 sm:w-52 md:w-56 flex-shrink-0 flex flex-col justify-between rounded-xl bg-neutral-950/80 backdrop-blur-md border border-white/15 p-2 shadow-xl min-h-0">
+              {/* Header */}
+              <div className="flex-shrink-0 border-b border-white/10 pb-1 mb-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[9.5px] font-black uppercase tracking-wider text-white font-mono">
+                      FICHA TÉCNICA
+                    </span>
+                  </div>
+                  <span className="px-1.5 py-0.5 rounded bg-white/10 text-[7px] font-mono text-cyan-300 font-bold uppercase">
+                    FIA
+                  </span>
+                </div>
               </div>
-              <span className="text-[8px] sm:text-[9px] text-cyan-400 font-bold tracking-wider uppercase shrink-0">
-                TOCA UN BOTÓN PARA CONFIGURAR
-              </span>
-            </div>
 
-            {/* 6 Selector Buttons Grid (Smaller, text well-fitted, 90% opacity images) */}
-            <div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 grid-rows-3 sm:grid-rows-2 gap-1.5 sm:gap-2 md:gap-2.5 w-full items-stretch">
+              {/* 6 Minimalist Telemetry Rows */}
+              <div className="flex-1 min-h-0 space-y-1 overflow-hidden flex flex-col justify-around py-0.5">
+                {/* 1. Circuito */}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('circuit'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>🏁 CIRCUITO</span>
+                    <span className="text-cyan-400">EDIT</span>
+                  </div>
+                  <div className="text-[9px] font-bold text-white truncate">{currentCircuit.name}</div>
+                  <div className="text-[7px] font-mono text-neutral-400 truncate">{(currentCircuit.totalLength / 1000).toFixed(1)} km · {currentCircuit.cornersCount} Curvas</div>
+                </div>
+
+                {/* 2. Neumático */}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('tires'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>🛞 NEUMÁTICO</span>
+                    <span className="text-cyan-400">EDIT</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-white uppercase truncate">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        startingCompound === 'soft'
+                          ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                          : startingCompound === 'medium'
+                          ? 'bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.8)]'
+                          : 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]'
+                      }`}
+                    />
+                    <span className="truncate">
+                      {startingCompound === 'soft' ? 'Blando C4 (Rojo)' : startingCompound === 'medium' ? 'Medio C3 (Amarillo)' : 'Duro C2 (Blanco)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Vueltas */}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('laps'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>⏱️ DISTANCIA</span>
+                    <span className="text-amber-300 font-bold">~{calculateEstimatedTime(laps)}</span>
+                  </div>
+                  <div className="text-[9px] font-bold text-white font-mono">{laps} VUELTAS</div>
+                </div>
+
+                {/* 4. Dificultad / Sala */}
+                <div
+                  onClick={() => { playUiClick(700); if (activeScreen === 'multiplayer') setActiveOverlay('multiplayer_modal'); else setActiveOverlay('difficulty'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>{activeScreen === 'multiplayer' ? '🌐 SALA' : '⚡ DIFICULTAD IA'}</span>
+                  </div>
+                  <div className="text-[9px] font-bold text-white uppercase truncate">
+                    {activeScreen === 'multiplayer' ? (roomState ? `Sala ${roomState.code}` : '1v1 Online') : difficulty === 'easy' ? 'Novato' : difficulty === 'medium' ? 'Intermedio' : 'Leyenda FIA'}
+                  </div>
+                </div>
+
+                {/* 5. Monoplaza & Piloto */}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('livery'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>🏎️ PILOTO & ESCUDERÍA</span>
+                  </div>
+                  <div className="text-[9px] font-bold text-white truncate">#{carNumber} · {driverDisplayName}</div>
+                </div>
+
+                {/* 6. Asistencias */}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('setup'); }}
+                  className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[7px] font-mono text-neutral-400">
+                    <span>🛠️ ASISTENCIAS</span>
+                  </div>
+                  <div className="text-[7.5px] font-mono text-neutral-300">
+                    TC:{tractionControl ? 'ON' : 'OFF'} · ABS:{absEnabled ? 'ON' : 'OFF'} · Línea:{racingLine ? 'ON' : 'OFF'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Button at Bottom of Sidebar */}
+              <div className="flex-shrink-0 pt-1 border-t border-white/10 mt-0.5">
+                {activeScreen === 'career' && (
+                  <button
+                    onClick={handleLaunchCareer}
+                    onMouseEnter={playUiHover}
+                    className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-neutral-950 font-black text-[9.5px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>INICIAR</span>
+                  </button>
+                )}
+                {activeScreen === 'free' && (
+                  <button
+                    onClick={handleLaunchFreePractice}
+                    onMouseEnter={playUiHover}
+                    className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-neutral-950 font-black text-[9.5px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>A PISTA</span>
+                  </button>
+                )}
+                {activeScreen === 'multiplayer' && (
+                  <button
+                    onClick={() => { playUiClick(850); setActiveOverlay('multiplayer_modal'); }}
+                    onMouseEnter={playUiHover}
+                    className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-neutral-950 font-black text-[9.5px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Zap className="w-3 h-3 fill-current" />
+                    <span>{roomState ? 'GESTIONAR' : 'UNIRSE'}</span>
+                  </button>
+                )}
+                {activeScreen === 'grand_prix' && (
+                  <button
+                    onClick={handleLaunchGrandPrix}
+                    onMouseEnter={playUiHover}
+                    className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-red-600 via-rose-500 to-red-600 hover:from-red-500 hover:to-rose-400 text-white font-black text-[9.5px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>INICIAR GP</span>
+                  </button>
+                )}
+              </div>
+            </aside>
+
+            {/* Right: 6 Selector Buttons (3 cols x 2 rows, 60% opacity) */}
+            <div className="flex-1 min-h-0 grid grid-cols-3 grid-rows-2 gap-1.5 items-stretch h-full">
               {screen3Selectors.map((btn) => (
                 <button
                   key={btn.id}
                   onClick={btn.action}
                   onMouseEnter={playUiHover}
-                  className="group relative rounded-lg sm:rounded-xl overflow-hidden text-left cursor-pointer transition-all duration-300 flex flex-col justify-between p-2 sm:p-2.5 select-none border border-white/20 hover:border-red-500/80 hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] hover:scale-[1.01]"
+                  className="group relative rounded-xl overflow-hidden text-left cursor-pointer transition-all duration-300 flex flex-col justify-between p-1.5 sm:p-2 select-none border border-white/20 hover:border-red-500/80 hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] hover:scale-[1.01]"
                 >
-                  {/* Background Image: exactly 90% opacity as requested */}
+                  {/* Background Image: exactly 60% opacity */}
                   <img
                     src={btn.bg}
                     alt={btn.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-500 ease-out group-hover:scale-105"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 transition-transform duration-500 ease-out group-hover:scale-105"
                     loading="eager"
                   />
-                  {/* Subtle dark gradient overlay to guarantee text legibility */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/20 pointer-events-none" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none" />
 
-                  {/* Top Badge Row */}
+                  {/* Top Badge */}
                   <div className="relative z-10 flex items-center justify-between w-full gap-1">
-                    <span className="px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-mono font-black uppercase tracking-wider bg-black/70 backdrop-blur-md border border-white/20 text-neutral-200 truncate">
+                    <span className="px-1.5 py-0.5 rounded text-[6.5px] sm:text-[7.5px] font-mono font-black uppercase tracking-wider bg-black/70 backdrop-blur-md border border-white/20 text-neutral-200 truncate">
                       {btn.category}
                     </span>
-                    <span className="text-[7px] sm:text-[8px] font-mono font-bold text-red-300 bg-red-950/70 px-1.5 py-0.5 rounded border border-red-500/30 shrink-0">
+                    <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold text-red-300 bg-red-950/70 px-1 py-0.5 rounded border border-red-500/30 shrink-0">
                       {btn.tag}
                     </span>
                   </div>
 
-                  {/* Bottom Title & Subtitle (smaller font, no text clipping) */}
-                  <div className="relative z-10 flex flex-col justify-end mt-1 min-w-0">
+                  {/* Bottom Title & Subtitle */}
+                  <div className="relative z-10 flex flex-col justify-end mt-0.5 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wide text-white drop-shadow truncate">
+                      <span className="text-[9.5px] sm:text-[10.5px] md:text-xs font-black uppercase tracking-wide text-white drop-shadow truncate">
                         {btn.title}
                       </span>
-                      <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neutral-400 group-hover:text-red-400 transition-colors shrink-0" />
+                      <ChevronRight className="w-3 h-3 text-neutral-400 group-hover:text-red-400 transition-colors shrink-0" />
                     </div>
-                    <p className="text-[7.5px] sm:text-[9px] text-neutral-300 font-mono mt-0.5 truncate leading-tight">
+                    <p className="text-[7px] sm:text-[8px] text-neutral-300 font-mono mt-0.5 truncate leading-tight">
                       {btn.subtitle}
                     </p>
                   </div>
@@ -892,238 +1000,160 @@ export const MainMenuDashboard: React.FC<MainMenuDashboardProps> = ({
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Panel Lateral con el Resumen de los Selectores */}
-          <aside className="w-full lg:w-64 xl:w-72 flex-shrink-0 flex flex-col justify-between rounded-xl bg-neutral-950/75 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 shadow-2xl min-h-0">
-            {/* Header del Panel Lateral */}
-            <div className="flex-shrink-0 border-b border-white/10 pb-1.5 mb-1.5">
-              <div className="flex items-center justify-between">
+          {/* ========================================================================= */}
+          {/* LAYOUT B: PORTRAIT VIEWPORT (Vertical Phone: Minimalist Top Bar + 2x3 Grid) */}
+          {/* ========================================================================= */}
+          <div className="flex landscape:hidden flex-col gap-1.5 flex-1 min-h-0">
+            {/* Top Minimalist Summary Bar (arriba) */}
+            <div className="flex-shrink-0 rounded-xl bg-neutral-950/80 backdrop-blur-md border border-white/15 p-1.5 shadow-lg">
+              {/* Row 1: Title + Action Button */}
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-white font-mono">
-                    RESUMEN TÉCNICO
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-white font-mono">
+                    RESUMEN TÉCNICO FIA
                   </span>
                 </div>
-                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-[7px] sm:text-[8px] font-mono text-cyan-300 font-bold uppercase">
-                  FICHA FIA
-                </span>
+                <div className="w-32">
+                  {activeScreen === 'career' && (
+                    <button
+                      onClick={handleLaunchCareer}
+                      onMouseEnter={playUiHover}
+                      className="w-full py-1 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-neutral-950 font-black text-[9px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Play className="w-2.5 h-2.5 fill-current" />
+                      <span>INICIAR</span>
+                    </button>
+                  )}
+                  {activeScreen === 'free' && (
+                    <button
+                      onClick={handleLaunchFreePractice}
+                      onMouseEnter={playUiHover}
+                      className="w-full py-1 px-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-neutral-950 font-black text-[9px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Play className="w-2.5 h-2.5 fill-current" />
+                      <span>A PISTA</span>
+                    </button>
+                  )}
+                  {activeScreen === 'multiplayer' && (
+                    <button
+                      onClick={() => { playUiClick(850); setActiveOverlay('multiplayer_modal'); }}
+                      onMouseEnter={playUiHover}
+                      className="w-full py-1 px-2 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-neutral-950 font-black text-[9px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      <span>{roomState ? 'GESTIONAR' : 'UNIRSE'}</span>
+                    </button>
+                  )}
+                  {activeScreen === 'grand_prix' && (
+                    <button
+                      onClick={handleLaunchGrandPrix}
+                      onMouseEnter={playUiHover}
+                      className="w-full py-1 px-2 rounded-lg bg-gradient-to-r from-red-600 via-rose-500 to-red-600 hover:from-red-500 hover:to-rose-400 text-white font-black text-[9px] tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Play className="w-2.5 h-2.5 fill-current" />
+                      <span>INICIAR GP</span>
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-[7.5px] sm:text-[8px] text-neutral-400 mt-0.5 font-mono">
-                Ajustes actuales del monoplaza y carrera
-              </p>
-            </div>
 
-            {/* Listado compacto de parámetros del panel lateral */}
-            <div className="flex-1 min-h-0 space-y-1 sm:space-y-1.5 overflow-y-auto pr-0.5">
-              {/* 1. CIRCUITO */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  setActiveOverlay('circuit');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>🏁 Circuito</span>
-                  <span className="text-cyan-400 group-hover:underline">Elegir</span>
+              {/* Row 2: 6 Quick Horizontal Summary Chips */}
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 text-[8px] font-mono">
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('circuit'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer"
+                >
+                  <span className="text-neutral-400">🏁 </span>
+                  <span className="text-white font-bold truncate">{currentCircuit.name}</span>
                 </div>
-                <div className="text-[9.5px] sm:text-[10.5px] font-bold text-white truncate mt-0.5">
-                  {currentCircuit.name}
-                </div>
-                <div className="text-[7.5px] font-mono text-neutral-400 truncate">
-                  {(currentCircuit.totalLength / 1000).toFixed(2)} km · {currentCircuit.cornersCount} Curvas
-                </div>
-              </div>
-
-              {/* 2. NEUMÁTICOS */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  setActiveOverlay('tires');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>🛞 Neumático</span>
-                  <span className="text-cyan-400 group-hover:underline">Elegir</span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('tires'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer flex items-center justify-center gap-1"
+                >
                   <span
-                    className={`w-2 h-2 rounded-full ${
-                      startingCompound === 'soft'
-                        ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
-                        : startingCompound === 'medium'
-                        ? 'bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.8)]'
-                        : 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]'
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      startingCompound === 'soft' ? 'bg-red-500' : startingCompound === 'medium' ? 'bg-yellow-400' : 'bg-white'
                     }`}
                   />
-                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-white uppercase">
-                    {startingCompound === 'soft'
-                      ? 'Blando C4 (Rojo)'
-                      : startingCompound === 'medium'
-                      ? 'Medio C3 (Amarillo)'
-                      : 'Duro C2 (Blanco)'}
-                  </span>
+                  <span className="text-white font-bold truncate">{startingCompound.toUpperCase()}</span>
                 </div>
-                <div className="text-[7.5px] font-mono text-neutral-400">
-                  {startingCompound === 'soft'
-                    ? 'Agarre 100% · 8-10 v.'
-                    : startingCompound === 'medium'
-                    ? 'Agarre 92% · 18-22 v.'
-                    : 'Agarre 84% · 35+ v.'}
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('laps'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer"
+                >
+                  <span className="text-neutral-400">⏱️ </span>
+                  <span className="text-amber-300 font-bold">{laps}V</span>
                 </div>
-              </div>
-
-              {/* 3. VUELTAS */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  setActiveOverlay('laps');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>⏱️ Distancia</span>
-                  <span className="text-cyan-400 group-hover:underline">Elegir</span>
+                <div
+                  onClick={() => { playUiClick(700); if (activeScreen === 'multiplayer') setActiveOverlay('multiplayer_modal'); else setActiveOverlay('difficulty'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer"
+                >
+                  <span className="text-neutral-400">⚡ </span>
+                  <span className="text-white font-bold truncate">{difficulty.toUpperCase()}</span>
                 </div>
-                <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-white font-mono">
-                    {laps} VUELTAS
-                  </span>
-                  <span className="text-[8.5px] font-mono font-bold text-amber-300">
-                    ~{calculateEstimatedTime(laps)}
-                  </span>
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('livery'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer"
+                >
+                  <span className="text-neutral-400">🏎️ </span>
+                  <span className="text-white font-bold truncate">#{carNumber} {driverCode}</span>
                 </div>
-              </div>
-
-              {/* 4. DIFICULTAD O SALA */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  if (activeScreen === 'multiplayer') setActiveOverlay('multiplayer_modal');
-                  else setActiveOverlay('difficulty');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>{activeScreen === 'multiplayer' ? '🌐 Sala' : '⚡ Dificultad IA'}</span>
-                  <span className="text-cyan-400 group-hover:underline">Ajustar</span>
-                </div>
-                <div className="text-[9.5px] sm:text-[10.5px] font-bold text-white uppercase mt-0.5 truncate">
-                  {activeScreen === 'multiplayer'
-                    ? roomState
-                      ? `Sala ${roomState.code}`
-                      : 'Multijugador 1v1'
-                    : difficulty === 'easy'
-                    ? 'Novato'
-                    : difficulty === 'medium'
-                    ? 'Intermedio'
-                    : 'Leyenda FIA'}
-                </div>
-              </div>
-
-              {/* 5. MONOPLAZA & PILOTO */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  setActiveOverlay('livery');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>🏎️ Monoplaza</span>
-                  <span className="text-cyan-400 group-hover:underline">Editar</span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-red-600/40 border border-red-500/50 flex items-center justify-center text-[7.5px] font-black text-white font-mono">
-                    {carNumber}
-                  </span>
-                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-white truncate">
-                    {driverDisplayName}
-                  </span>
-                </div>
-                <div className="text-[7.5px] font-mono text-neutral-400 truncate">
-                  {teamName}
-                </div>
-              </div>
-
-              {/* 6. ASISTENCIAS */}
-              <div
-                onClick={() => {
-                  playUiClick(700);
-                  setActiveOverlay('setup');
-                }}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center justify-between text-[7.5px] font-mono text-neutral-400 uppercase">
-                  <span>🛠️ Asistencias</span>
-                  <span className="text-cyan-400 group-hover:underline">Ajustar</span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5 text-[7.5px] sm:text-[8px] font-mono font-semibold text-neutral-300">
-                  <span className={tractionControl ? 'text-emerald-400' : 'text-neutral-500'}>
-                    TC:{tractionControl ? 'ON' : 'OFF'}
-                  </span>
-                  <span>·</span>
-                  <span className={absEnabled ? 'text-emerald-400' : 'text-neutral-500'}>
-                    ABS:{absEnabled ? 'ON' : 'OFF'}
-                  </span>
-                  <span>·</span>
-                  <span className={racingLine ? 'text-cyan-400' : 'text-neutral-500'}>
-                    Línea:{racingLine ? 'ON' : 'OFF'}
-                  </span>
+                <div
+                  onClick={() => { playUiClick(700); setActiveOverlay('setup'); }}
+                  className="px-1 py-0.5 rounded bg-white/[0.04] border border-white/10 text-center truncate cursor-pointer"
+                >
+                  <span className="text-neutral-400">🛠️ </span>
+                  <span className="text-emerald-400 font-bold">TC:{tractionControl ? 'ON' : 'OFF'}</span>
                 </div>
               </div>
             </div>
 
-            {/* BOTÓN DE INICIAR: MUCHO MÁS PEQUEÑO Y MENOS INTRUSIVO */}
-            <div className="flex-shrink-0 pt-1.5 border-t border-white/10 mt-1">
-              {activeScreen === 'career' && (
+            {/* 6 Selector Buttons Grid (2 cols x 3 rows, 60% opacity) */}
+            <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-3 gap-1.5 items-stretch">
+              {screen3Selectors.map((btn) => (
                 <button
-                  onClick={handleLaunchCareer}
+                  key={btn.id}
+                  onClick={btn.action}
                   onMouseEnter={playUiHover}
-                  className="w-full py-1.5 sm:py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-neutral-950 font-black text-[10px] sm:text-[11px] tracking-wider uppercase transition-all shadow-md hover:shadow-amber-500/30 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  className="group relative rounded-xl overflow-hidden text-left cursor-pointer transition-all duration-300 flex flex-col justify-between p-2 select-none border border-white/20 hover:border-red-500/80 hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] hover:scale-[1.01]"
                 >
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>INICIAR TEMPORADA</span>
-                </button>
-              )}
+                  {/* Background Image: exactly 60% opacity */}
+                  <img
+                    src={btn.bg}
+                    alt={btn.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 transition-transform duration-500 ease-out group-hover:scale-105"
+                    loading="eager"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/20 pointer-events-none" />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none" />
 
-              {activeScreen === 'free' && (
-                <button
-                  onClick={handleLaunchFreePractice}
-                  onMouseEnter={playUiHover}
-                  className="w-full py-1.5 sm:py-2 px-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-neutral-950 font-black text-[10px] sm:text-[11px] tracking-wider uppercase transition-all shadow-md hover:shadow-cyan-500/30 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>SALTAR A PISTA</span>
-                </button>
-              )}
+                  {/* Top Badge */}
+                  <div className="relative z-10 flex items-center justify-between w-full gap-1">
+                    <span className="px-1.5 py-0.5 rounded text-[7px] font-mono font-black uppercase tracking-wider bg-black/70 backdrop-blur-md border border-white/20 text-neutral-200 truncate">
+                      {btn.category}
+                    </span>
+                    <span className="text-[7px] font-mono font-bold text-red-300 bg-red-950/70 px-1 py-0.5 rounded border border-red-500/30 shrink-0">
+                      {btn.tag}
+                    </span>
+                  </div>
 
-              {activeScreen === 'multiplayer' && (
-                <button
-                  onClick={() => {
-                    playUiClick(850);
-                    setActiveOverlay('multiplayer_modal');
-                  }}
-                  onMouseEnter={playUiHover}
-                  className="w-full py-1.5 sm:py-2 px-3 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-neutral-950 font-black text-[10px] sm:text-[11px] tracking-wider uppercase transition-all shadow-md hover:shadow-emerald-500/30 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                >
-                  <Zap className="w-3 h-3 fill-current" />
-                  <span>{roomState ? 'GESTIONAR SALA' : 'UNIRSE / CREAR'}</span>
+                  {/* Bottom Title & Subtitle */}
+                  <div className="relative z-10 flex flex-col justify-end mt-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] sm:text-xs font-black uppercase tracking-wide text-white drop-shadow truncate">
+                        {btn.title}
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 text-neutral-400 group-hover:text-red-400 transition-colors shrink-0" />
+                    </div>
+                    <p className="text-[7.5px] sm:text-[8.5px] text-neutral-300 font-mono mt-0.5 truncate leading-tight">
+                      {btn.subtitle}
+                    </p>
+                  </div>
                 </button>
-              )}
-
-              {activeScreen === 'grand_prix' && (
-                <button
-                  onClick={handleLaunchGrandPrix}
-                  onMouseEnter={playUiHover}
-                  className="w-full py-1.5 sm:py-2 px-3 rounded-lg bg-gradient-to-r from-red-600 via-rose-500 to-red-600 hover:from-red-500 hover:to-rose-400 text-white font-black text-[10px] sm:text-[11px] tracking-wider uppercase transition-all shadow-md hover:shadow-red-600/30 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>INICIAR GRAN PREMIO</span>
-                </button>
-              )}
+              ))}
             </div>
-          </aside>
+          </div>
         </main>
       )}
 
